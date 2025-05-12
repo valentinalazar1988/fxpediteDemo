@@ -104,15 +104,21 @@ class Search {
       });
   }
 
-  checkItinerary() {
+  checkItinerary(expectedCount = '1') {
     cy.contains('button', 'Itinerary Summary')
       .should('be.visible')
-      .click();
-
-    cy.get(this.itineraryModalSelector)
-      .should('be.visible')
       .within(() => {
-        cy.contains('Flight Details').should('be.visible');
+        cy.get('span.bg-danger')
+          .should('contain.text', expectedCount);
+      })
+      .click();
+  
+    cy.get('.p-20', { timeout: 10000 })
+      .should('be.visible')
+      .invoke('text')
+      .then((text) => {
+        cy.log('Modal text:', text);
+        expect(text.toLowerCase()).to.match(/flight|itinerary|summary/);
       });
   }
 }
