@@ -1,96 +1,119 @@
 class Search {
-  getFromInput = () => cy.get('input[placeholder="Where from"]');
-  getToInput = () => cy.get('input[placeholder="Where to"]');
+  fromInputSelector = 'input[role="combobox"][placeholder="Where from"]';
+  toInputSelector = 'input[role="combobox"][placeholder="Where to"]';
+  departureDateInputSelector = 'input[placeholder="Date of Travel"]';
+  returnDateInputSelector = 'input[placeholder="Date of Return"]';
+  searchButtonSelector = 'button[type="submit"]';
+  flightCardsSelector = 'swiper-container.swiper-initialized.swiper-horizontal.swiper-backface-hidden';
+  paginationButtonsSelector = 'ul[aria-label="Pagination"] button';
+  calendarDaySelector = '.dp__cell_inner';
+  itineraryButtonSelector = 'button:contains("Itinerary Summary")';
+  selectFlightButtonSelector = 'button.bg-primary:contains("Select")';
+  itineraryModalSelector = '.modal-content';
 
-  getDepartureDateInput = () =>
-    cy.get('input[placeholder="Date of Travel"]').should('exist');
-
-  getReturnDateInput = () =>
-    cy.get('input[placeholder="Date of Return"]').should('exist');
-
-  getSearchButton = () =>
-    cy.get('button[type="submit"]').contains('Search');
-
-  getFlightCards = () =>
-    cy.get('div.flex.flex-col.gap-y-8.rounded-2xl.border');
-
-  getPaginationButtons = () =>
-    cy.get('ul[aria-label="Pagination"] button');
-
-  selectFlight = () =>
-    cy.get('[data-cy="select-flight-button"]');
-
-  selectFirstFlight() {
-    this.selectFlight().first().click();
-  }
-
-  checkItineraryCount = () => {
-    return cy.contains('span', 'Itinerary Summary')
-             .parent()
-             .find('span.bg-danger');
-  }
-
-  checkItineraryBadge(expectedCount = '1') {
-    this.checkItineraryCount()
+  enterFromCity(city = 'London') {
+    cy.get(this.fromInputSelector)
       .should('be.visible')
-      .and('contain', expectedCount);
-  }
+      .click()
+      .clear()
+      .type(city, { delay: 100 });
 
-  selectCityFromDropdown = (city) => {
     cy.get('[role="option"]')
       .contains(new RegExp(city, 'i'))
+      .should('be.visible')
       .first()
       .click();
   }
 
-  enterFromCity(city) {
-    this.getFromInput().clear().type(city);
-    this.selectCityFromDropdown(city);
-  }
-
-  enterToCity(city) {
-    this.getToInput().clear().type(city);
-    this.selectCityFromDropdown(city);
-  }
-
-  setTravelDates(departureDate, returnDate) {
-    this.getDepartureDateInput()
-      .invoke('removeAttr', 'readonly')
+  enterToCity(city = 'Amsterdam') {
+    cy.get(this.toInputSelector)
+      .should('be.visible')
+      .click()
       .clear()
-      .type(departureDate);
+      .type(city, { delay: 100 });
 
-    this.getReturnDateInput()
-      .invoke('removeAttr', 'readonly')
-      .clear()
-      .type(returnDate);
+    cy.get('[role="option"]')
+      .contains(new RegExp(city, 'i'))
+      .should('be.visible')
+      .first()
+      .click();
   }
 
-  searchFlights(fromCity, toCity, departureDate, returnDate) {
-    this.enterFromCity(fromCity);
-    this.enterToCity(toCity);
-    this.setTravelDates(departureDate, returnDate);
-    this.getSearchButton().click();
+  setTravelDates(departureDate = '') {
+    cy.get(this.departureDateInputSelector)
+      .should('be.visible')
+      .invoke('removeAttr', 'readonly')
+      .clear({ force: true })
+      .type('{selectall}{backspace}')
+      .type(departureDate, { delay: 50 });
+
+    cy.wait(1000);
+  }
+
+  selectReturnDate(day = '31') {
+    cy.get(this.returnDateInputSelector)
+      .should('be.visible')
+      .click();
+
+    cy.get(this.calendarDaySelector)
+      .contains(new RegExp(`^${day}$`))
+      .should('be.visible')
+      .click();
+  }
+
+  clickSearchButton() {
+    cy.get(this.searchButtonSelector)
+      .contains('Search')
+      .should('be.visible')
+      .and('not.be.disabled')
+      .click();
   }
 
   verifyFlightCardsVisible() {
-    this.getFlightCards()
+    cy.get(this.flightCardsSelector)
       .should('exist')
-      .and('have.length.greaterThan', 0)
-      .each((card) => {
-        cy.wrap(card).should('be.visible');
-      });
+      .and('be.visible');
   }
 
   checkPaginationIsVisible() {
-    cy.get('ul[aria-label="Pagination"]')
+    cy.get(this.paginationButtonsSelector)
       .should('exist')
       .and('be.visible');
   }
 
   verifyNumberOfPages(expectedCount) {
-    this.getPaginationButtons()
-      .not('[aria-disabled=true]')
+    cy.get('ul[aria-label="Pagination"]')
+      .find('button span')
       .should('have.length', expectedCount);
+  }
+
+  selectFlight() {
+    cy.get(this.selectFlightButtonSelector)
+      .first()
+      .should('be.visible')
+      .click();
+  }
+
+  checkItineraryCount(expectedCount = '1') {
+    cy.contains('button', 'Itinerary Summary')
+      .should('be.visible')
+      .within(() => {
+        cy.get('span')
+          .contains(expectedCount)
+          .should('be.visible');
+      });
+  }
+
+  checkItinerary() {
+    cy.contains('button', 'Itinerary Summary')
+      .should('be.visible')
+      .click();
+
+    cy.get(this.itineraryModalSelector)
+      .should('be.visible')
+      .within(() => {
+        cy.contains('Flight Details').should('be.visible');
+      });
   }
 }
 

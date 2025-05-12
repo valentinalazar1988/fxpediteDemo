@@ -2,5 +2,10 @@
   "devDependencies": {
     "cypress": "^14.3.3",
     "cypress-mochawesome-reporter": "^3.8.2"
+  },
+  "dependencies": {
+    "install": "^0.13.0",
+    "or": "^0.2.0",
+    "yarn": "^1.22.22"
   }
 }
